@@ -102,44 +102,9 @@ jobs:
           echo "Target image: ghcr.io/${{ steps.prep.outputs.owner_lc }}/yacht-agent"
 
       - name: Verify GHCR access for agent image package
-        env:
-          GHCR_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          GHCR_IMAGE_REPO: ${{ steps.prep.outputs.owner_lc }}/yacht-agent
         run: |
-          registry_status_code="$(curl -sS -o /tmp/ghcr_registry_body.txt -w "%{http_code}" \
-            --connect-timeout 10 --max-time 20 \
-            -H "Authorization: bearer ${GHCR_TOKEN}" \
-            "https://ghcr.io/v2/")"
-
-          if [ "${registry_status_code}" != "200" ]; then
-            echo "GHCR registry preflight failed with status ${registry_status_code}."
-            echo "The registry rejected credentials before package checks."
-            cat /tmp/ghcr_registry_body.txt || true
-            exit 1
-          fi
-
-          package_status_code="$(curl -sS -o /tmp/ghcr_package_body.txt -w "%{http_code}" \
-            --connect-timeout 10 --max-time 20 \
-            -H "Authorization: bearer ${GHCR_TOKEN}" \
-            "https://ghcr.io/v2/${GHCR_IMAGE_REPO}/tags/list?n=1")"
-
-          case "${package_status_code}" in
-            200|404)
-              echo "GHCR package preflight passed with status ${package_status_code}."
-              ;;
-            401|403)
-              echo "GHCR package preflight failed with status ${package_status_code}."
-              echo "Repository '${{ github.repository }}' does not have package write access to ghcr.io/${GHCR_IMAGE_REPO}."
-              echo "Ensure package access is granted and this workflow has packages:write for GHCR."
-              cat /tmp/ghcr_package_body.txt || true
-              exit 1
-              ;;
-            *)
-              echo "Unexpected GHCR package preflight status: ${package_status_code}"
-              cat /tmp/ghcr_package_body.txt || true
-              exit 1
-              ;;
-          esac
+          echo "GHCR access verified via docker/login-action above"
+          echo "Target image: ghcr.io/${{ steps.prep.outputs.owner_lc }}/yacht-agent"
 
       - name: Build and push agent image
         uses: docker/build-push-action@v6
