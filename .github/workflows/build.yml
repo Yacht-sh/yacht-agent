@@ -103,13 +103,12 @@ jobs:
 
       - name: Verify GHCR access for agent image package
         env:
-          GHCR_USERNAME: ${{ github.actor }}
           GHCR_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GHCR_IMAGE_REPO: ${{ steps.prep.outputs.owner_lc }}/yacht-agent
         run: |
           registry_status_code="$(curl -sS -o /tmp/ghcr_registry_body.txt -w "%{http_code}" \
             --connect-timeout 10 --max-time 20 \
-            -u "${GHCR_USERNAME}:${GHCR_TOKEN}" \
+            -H "Authorization: bearer ${GHCR_TOKEN}" \
             "https://ghcr.io/v2/")"
 
           if [ "${registry_status_code}" != "200" ]; then
@@ -121,7 +120,7 @@ jobs:
 
           package_status_code="$(curl -sS -o /tmp/ghcr_package_body.txt -w "%{http_code}" \
             --connect-timeout 10 --max-time 20 \
-            -u "${GHCR_USERNAME}:${GHCR_TOKEN}" \
+            -H "Authorization: bearer ${GHCR_TOKEN}" \
             "https://ghcr.io/v2/${GHCR_IMAGE_REPO}/tags/list?n=1")"
 
           case "${package_status_code}" in
