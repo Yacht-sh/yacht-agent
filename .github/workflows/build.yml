@@ -49,6 +49,7 @@ jobs:
     runs-on: ubuntu-latest
     needs:
       - verify-agent
+    if: github.ref == 'refs/heads/main'
     permissions:
       contents: read
       packages: write
@@ -73,7 +74,9 @@ jobs:
         id: meta
         uses: docker/metadata-action@v5
         with:
-          images: ghcr.io/${{ steps.prep.outputs.owner_lc }}/yacht-agent
+          images: |
+            ghcr.io/${{ steps.prep.outputs.owner_lc }}/yacht-agent
+            docker.io/tyates2020/yacht-sh-agent
           tags: |
             type=raw,value=${{ steps.prep.outputs.channel_tag }}
             type=raw,value=${{ steps.prep.outputs.version_tag }}
@@ -95,16 +98,12 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.CR_PAT }}
 
-      - name: Show GHCR auth context
-        run: |
-          echo "GHCR auth mode: GITHUB_TOKEN"
-          echo "GHCR auth user: ${{ github.actor }}"
-          echo "Target image: ghcr.io/${{ steps.prep.outputs.owner_lc }}/yacht-agent"
-
-      - name: Verify GHCR access for agent image package
-        run: |
-          echo "GHCR access verified via docker/login-action above"
-          echo "Target image: ghcr.io/${{ steps.prep.outputs.owner_lc }}/yacht-agent"
+      - name: Log in to Docker Hub
+        uses: docker/login-action@v4
+        with:
+          registry: docker.io
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
 
       - name: Build and push agent image
         uses: docker/build-push-action@v6
