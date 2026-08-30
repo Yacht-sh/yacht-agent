@@ -75,4 +75,4 @@ docker build -t ghcr.io/yacht-sh/yacht-agent:latest .
 
 ## License
 
-MIT
+GNU General Public License v3.0
